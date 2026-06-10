@@ -27,6 +27,7 @@ flowchart LR
 | `scripts/build.py` | Validates every line, then emits per-client formats into `dist/`. Fails CI on any malformed rule. PEP 723 [uv](https://docs.astral.sh/uv/) script — run with `uv run`. |
 | `examples/clash.yaml` | How to consume via mihomo `rule-providers` + `RULE-SET`. |
 | `examples/shadowrocket.conf` | How to consume the same lists from Shadowrocket. |
+| `docs/` | Knowledge base: jsDelivr caching/purge & China reachability, release pipeline, rule syntax, AI endpoint notes, tooling. Start at [`docs/README.md`](docs/README.md). |
 | `.github/workflows/build.yml` | CI: validate + build on every push, publish `dist/` to the **`release`** branch (Loyalsoldier-style). |
 | `Justfile` | `just build` / `just check` / `just stats`. |
 
