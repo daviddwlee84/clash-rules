@@ -1,0 +1,64 @@
+# Example: consume these rule-sets from Clash / mihomo via rule-providers.
+#
+# URLs point at the `release` branch (built by CI from main), fronted by the
+# jsDelivr CDN which is more GFW-reachable than raw.githubusercontent.com.
+# You control when rules change by controlling when main builds.
+#
+# These rule-sets are PUBLIC (no secrets). Your NODES are separate and should
+# be protected — see the SelfHostProviders.md doc in DockerCompose-V2Ray.
+
+rule-providers:
+  reject:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/reject.list"
+    path: ./ruleset/reject.list
+  direct:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/direct.list"
+    path: ./ruleset/direct.list
+  proxy:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/proxy.list"
+    path: ./ruleset/proxy.list
+  apple:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/apple.list"
+    path: ./ruleset/apple.list
+  media-global:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/media-global.list"
+    path: ./ruleset/media-global.list
+  media-hkmt:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/media-hkmt.list"
+    path: ./ruleset/media-hkmt.list
+
+# Order matters — first match wins. reject -> direct/apple -> media -> proxy,
+# then GEOIP/MATCH as the base catch-all (kept here, not in the rule-sets).
+rules:
+  - RULE-SET,reject,REJECT
+  - RULE-SET,apple,Apple
+  - RULE-SET,media-hkmt,HKMTMedia
+  - RULE-SET,media-global,GlobalMedia
+  - RULE-SET,direct,DIRECT
+  - RULE-SET,proxy,PROXY
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY
