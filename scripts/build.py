@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
 """Build categorized rule-set sources (`rules/*.list`) into per-client
 output formats under `dist/`.
 
@@ -13,10 +17,10 @@ The classical text body is identical across Clash and Shadowrocket, so a
 single maintained list feeds every client — no per-client patching.
 
 Validates each line first; exits non-zero on any bad rule so CI fails loudly.
-Pure stdlib, no dependencies.
+Pure stdlib, no dependencies. PEP 723 uv script — run via `uv run`.
 
 Usage:
-    python scripts/build.py
+    uv run scripts/build.py
 """
 from __future__ import annotations
 

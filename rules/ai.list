@@ -1,0 +1,66 @@
+# ai.list — AI services (LLM chat, APIs, coding assistants) -> AI policy
+# Classical rule-set format (rule minus policy). Maintain by hand.
+#
+# WHY a separate category: most AI providers geo-block by egress IP
+# (HK / "unsupported region" nodes get 403 / account bans), so these
+# deserve their own policy group pinned to US/JP/SG nodes instead of
+# riding the generic PROXY group. Wire as `RULE-SET,ai,AI` (or point at
+# PROXY if you don't keep a dedicated group).
+#
+# Maintenance notes:
+# - One vendor per section; keep sections alphabetized-ish and add new
+#   vendors as their own section with a date/source comment if obscure.
+# - DeepSeek / Qwen / Kimi etc. are mainland-direct services — they
+#   belong in direct.list (or nowhere), NOT here.
+# - Gemini lives under google.com, so exact DOMAIN entries are used for
+#   the AI-specific hosts; don't DOMAIN-SUFFIX google.com here.
+
+# --- Anthropic / Claude (claude.ai = legacy app domain, claude.com = current) ---
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,claude.com
+
+# --- Cursor (cursor.sh = legacy + api2/repo42 endpoints, cursorapi.com = api CDN) ---
+DOMAIN-SUFFIX,cursor.com
+DOMAIN-SUFFIX,cursor.sh
+DOMAIN-SUFFIX,cursor-cdn.com
+DOMAIN-SUFFIX,cursorapi.com
+
+# --- GitHub Copilot (completions go via githubcopilot.com, not github.com) ---
+DOMAIN-SUFFIX,githubcopilot.com
+DOMAIN-SUFFIX,copilot.microsoft.com
+
+# --- Google Gemini / AI (exact hosts — keep the rest of google.com out of this group) ---
+DOMAIN,gemini.google.com
+DOMAIN,aistudio.google.com
+DOMAIN,notebooklm.google.com
+DOMAIN,generativelanguage.googleapis.com
+DOMAIN,aiplatform.googleapis.com
+DOMAIN-SUFFIX,ai.google.dev
+DOMAIN-SUFFIX,deepmind.com
+DOMAIN-SUFFIX,deepmind.google
+
+# --- Meta AI ---
+DOMAIN-SUFFIX,meta.ai
+
+# --- Mistral ---
+DOMAIN-SUFFIX,mistral.ai
+
+# --- OpenAI / ChatGPT (oaistatic/oaiusercontent = asset CDNs, chatgpt.com = app) ---
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,sora.com
+DOMAIN-KEYWORD,openai
+
+# --- Perplexity ---
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-SUFFIX,pplx.ai
+
+# --- Poe (Quora's multi-model frontend) ---
+DOMAIN-SUFFIX,poe.com
+
+# --- xAI / Grok ---
+DOMAIN-SUFFIX,x.ai
+DOMAIN-SUFFIX,grok.com

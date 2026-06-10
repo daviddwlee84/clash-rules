@@ -24,8 +24,7 @@ flowchart LR
 | Path | Purpose |
 |---|---|
 | `rules/*.list` | **The only files you edit.** One category per file, classical syntax (rule **minus** policy — policy comes from the `RULE-SET,<name>,<policy>` line in each client's base config). `#` comments allowed. |
-| `scripts/build.py` | Validates every line, then emits per-client formats into `dist/`. Fails CI on any malformed rule. |
-| `scripts/migrate_from_legacy.py` | One-shot provenance script: split the monolithic `rules:` block of DockerCompose-V2Ray's legacy Clash config into these categories. |
+| `scripts/build.py` | Validates every line, then emits per-client formats into `dist/`. Fails CI on any malformed rule. PEP 723 [uv](https://docs.astral.sh/uv/) script — run with `uv run`. |
 | `examples/clash.yaml` | How to consume via mihomo `rule-providers` + `RULE-SET`. |
 | `examples/shadowrocket.conf` | How to consume the same lists from Shadowrocket. |
 | `.github/workflows/build.yml` | CI: validate + build on every push, publish `dist/` to the **`release`** branch (Loyalsoldier-style). |
@@ -35,6 +34,7 @@ flowchart LR
 
 | File | Intended policy | Content |
 |---|---|---|
+| `ai.list` | `AI` group | AI services (OpenAI/Claude/Cursor/Gemini/Copilot/…) — geo-blocked by IP, pin to US/JP/SG nodes |
 | `reject.list` | `REJECT` | ISP hijacking, malware, fake-software (思杰马克丁) domains/IPs |
 | `proxy.list` | `PROXY` | DNS-pollution-protected & blocked sites (Google/Meta/Telegram/…) |
 | `direct.list` | `DIRECT` | Mainland-China services, CDNs, scholar sites, private trackers |
@@ -55,7 +55,7 @@ defaults) intentionally stay **out** of the rule-sets — see the examples.
 Local check before pushing:
 
 ```bash
-just build   # or: python3 scripts/build.py
+just build   # or: uv run scripts/build.py
 ```
 
 ## Consuming
@@ -92,8 +92,9 @@ See [`examples/clash.yaml`](examples/clash.yaml) and
 
 Initial content migrated from
 [DockerCompose-V2Ray `legacy/example/clash_for_windows.yml`](https://github.com/daviddwlee84/DockerCompose-V2Ray/blob/master/legacy/example/clash_for_windows.yml)
-(itself derived from common community rule lists circa 2020) via
-`scripts/migrate_from_legacy.py`: 1272 rules across 6 categories.
+(itself derived from common community rule lists circa 2020) via a one-shot
+`scripts/migrate_from_legacy.py` (since deleted — see git history): 1272 rules
+across 6 categories.
 
 ## License
 

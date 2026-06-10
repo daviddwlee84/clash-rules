@@ -17,12 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
 
       - name: Validate & build
-        run: python scripts/build.py
+        # PEP 723 inline metadata in the script pins the Python version
+        run: uv run scripts/build.py
 
       - name: Publish dist/ to the release branch
         # Same pattern as Loyalsoldier/clash-rules: consumers pin @release so

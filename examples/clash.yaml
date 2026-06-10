@@ -1,7 +1,9 @@
 # Example: consume these rule-sets from Clash / mihomo via rule-providers.
 #
-# URLs point at the `release` branch (built by CI from main), fronted by the
-# jsDelivr CDN which is more GFW-reachable than raw.githubusercontent.com.
+# URLs point at the `release` branch (CI builds dist/ from main and publishes
+# its CONTENTS as the root of `release` — dist/ is gitignored on main, so
+# `@main/dist/...` URLs 404). Fronted by the jsDelivr CDN which is more
+# GFW-reachable than raw.githubusercontent.com.
 # You control when rules change by controlling when main builds.
 #
 # These rule-sets are PUBLIC (no secrets). Your NODES are separate and should
@@ -13,48 +15,58 @@ rule-providers:
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/reject.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/reject.list"
     path: ./ruleset/reject.list
+  ai:
+    type: http
+    behavior: classical
+    format: text
+    interval: 86400
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/ai.list"
+    path: ./ruleset/ai.list
   direct:
     type: http
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/direct.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/direct.list"
     path: ./ruleset/direct.list
   proxy:
     type: http
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/proxy.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/proxy.list"
     path: ./ruleset/proxy.list
   apple:
     type: http
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/apple.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/apple.list"
     path: ./ruleset/apple.list
   media-global:
     type: http
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/media-global.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/media-global.list"
     path: ./ruleset/media-global.list
   media-hkmt:
     type: http
     behavior: classical
     format: text
     interval: 86400
-    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@main/dist/clash/media-hkmt.list"
+    url: "https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/media-hkmt.list"
     path: ./ruleset/media-hkmt.list
 
-# Order matters — first match wins. reject -> direct/apple -> media -> proxy,
-# then GEOIP/MATCH as the base catch-all (kept here, not in the rule-sets).
+# Order matters — first match wins. reject -> ai -> direct/apple -> media ->
+# proxy, then GEOIP/MATCH as the base catch-all (kept here, not in the
+# rule-sets). "AI" should be a dedicated group of US/JP/SG nodes (AI vendors
+# geo-block HK etc.); if you don't keep one, point the line at PROXY instead.
 rules:
   - RULE-SET,reject,REJECT
+  - RULE-SET,ai,AI
   - RULE-SET,apple,Apple
   - RULE-SET,media-hkmt,HKMTMedia
   - RULE-SET,media-global,GlobalMedia
