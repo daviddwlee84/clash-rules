@@ -1,0 +1,40 @@
+name: Build & Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly rebuild keeps the release branch fresh even without commits
+    - cron: "0 2 * * 1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate & build
+        run: python scripts/build.py
+
+      - name: Publish dist/ to the release branch
+        # Same pattern as Loyalsoldier/clash-rules: consumers pin @release so
+        # main can change freely without breaking clients mid-edit.
+        if: github.event_name != 'pull_request'
+        run: |
+          cd dist
+          git init -b release
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "build: ${GITHUB_SHA::7} $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
