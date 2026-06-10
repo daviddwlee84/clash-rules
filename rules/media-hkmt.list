@@ -1,0 +1,7 @@
+# media-hkmt.list — HK/Macau/Taiwan-restricted media -> media policy
+# Migrated from DockerCompose-V2Ray legacy Clash config.
+# Classical rule-set format (rule minus policy). Maintain by hand.
+
+DOMAIN,cache.video.iqiyi.com
+DOMAIN-SUFFIX,bilibili.com
+DOMAIN,upos-hz-mirrorakam.akamaized.net
