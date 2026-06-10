@@ -1,0 +1,8 @@
+category	rules
+ai	30
+apple	15
+direct	342
+media-global	150
+media-hkmt	3
+proxy	552
+reject	210
