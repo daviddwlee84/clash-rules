@@ -114,7 +114,7 @@ def fixture(core):
     temporary = None
     try:
         base = {"mixed-port": port, "bind-address": "127.0.0.1", "allow-lan": False,
-                "ipv6": False, "mode": "rule", "log-level": "error",
+                "ipv6": False, "mode": "rule", "log-level": "info",
                 "dns": {"enable": True, "nameserver": ["rcode://success"], "enhanced-mode": "redir-host"},
                 "proxies": [{"name": "fixture-ai", "type": "socks5", "server": "127.0.0.1",
                              "port": servers[0].server_address[1]},
@@ -134,8 +134,10 @@ def fixture(core):
         path = Path(directory) / "config.json"
         path.write_text(json.dumps(config))
         native_test(core, path, directory)
-        process = subprocess.Popen([str(core), "-d", directory, "-f", str(path)],
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log_path = Path(directory) / "fixture.log"
+        with log_path.open("wb") as log:
+            process = subprocess.Popen([str(core), "-d", directory, "-f", str(path)],
+                                       stdout=log, stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 8
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         while time.monotonic() < deadline:
@@ -155,12 +157,15 @@ def fixture(core):
         cases = json.loads((ROOT / "tests/routing-cases.json").read_text())
         for case in cases:
             request = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+            outcome = None
             try:
                 # HTTP forwarding forces an outbound dial; CONNECT can be acknowledged lazily.
                 request.request("GET", "http://" + case["host"] + "/", headers={"Connection": "close"})
-                request.getresponse().read(4096)
-            except OSError:
-                pass  # The local sink intentionally refuses after recording the route.
+                response = request.getresponse()
+                outcome = {"status": response.status, "reason": response.reason}
+                response.read(4096)
+            except OSError as error:
+                outcome = {"error": type(error).__name__}
             finally:
                 request.close()
             observed_deadline = time.monotonic() + 2
@@ -168,7 +173,10 @@ def fixture(core):
                 time.sleep(.01)
             actual = [policy for host, policy in seen if host == case["host"]]
             if actual != [case["expected"]]:
-                raise ValueError("native routing case failed: " + case["host"] + " observed=" + repr(seen))
+                # Only this public, loopback-only fixture log may be reported; private -t stays suppressed.
+                diagnostic = log_path.read_text(errors="replace")[-4000:]
+                raise ValueError("native routing case failed: " + case["host"] + " observed=" + repr(seen)
+                                 + " outcome=" + repr(outcome) + "\nfixture core:\n" + diagnostic)
         process.terminate()
         process.wait(timeout=5)
         process = None
