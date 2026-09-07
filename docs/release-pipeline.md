@@ -1,68 +1,27 @@
-# 发布链路：从 git push 到客户端生效
+# 版本發布與回滾
 
-```mermaid
-flowchart LR
-  edit["编辑 rules/*.list"] -->|"push main"| ci["GitHub Actions<br/>uv run scripts/build.py"]
-  ci -->|"orphan force-push"| rel["release 分支<br/>(dist/ 内容为根)"]
-  rel -->|"12h 缓存"| cdn["jsDelivr CDN<br/>@release URLs"]
-  cdn -->|"provider interval 24h"| client["mihomo / Shadowrocket"]
-```
+build 對自有規則、mirror、lock 與授權計算逐檔 SHA-256，再由 canonical hash map
+得到 manifest.json 的 version。沒有 timestamp，所以重建不會產生假更新。
 
-## release 分支模式（Loyalsoldier 风格）
+CI 對 PR 與 main 執行 unit tests、離線 build、publication preview 與 Mihomo 1.19.27
+localhost 路由 fixture。所需的 host core 與 Linux yq 下載皆由 tooling.lock.json 鎖定並驗 hash。
+通過後，僅 main 的 publish job 具有 contents:write。
 
-CI（[.github/workflows/build.yml](../.github/workflows/build.yml)）在每次
-push `main`、以及每周一定时任务时：
+scripts/publish.py 預設只是 preview。CI --publish 使用新的暫存 Git index 建立 dist tree，
+新 commit 的 parent 是目前 release 分支；以 atomic、非 force push 更新 release 與
+rules-<完整 version> tag。既有 tag 的 tree 必須完全相同，不可覆寫；並行更新不符合 fast-forward
+時失敗。來源 commit 寫入 commit message。沒有固定週期重建，也沒有自動提升上游資料。
 
-1. `uv run scripts/build.py` —— 校验每一行规则，任何坏行直接 fail，
-   坏内容到不了消费者。
-2. 在 `dist/` 里 `git init -b release` 新建孤儿仓库、单 commit 强推到
-   `origin/release`。
+| 引用 | 語意 |
+|---|---|
+| main | 原始碼、policy、鏡像與文件 |
+| release | 最新通過 CI 的浮動 artifact，仍可能受 CDN cache 影響 |
+| rules-<SHA-256> | 不變的 artifact tree，適合記錄部署版本與重現 |
+| Pi candidate SHA-256 | 私密裝置設定的完整 bytes；另外記錄 public rules version 與基底 hash |
 
-要点：
+一般訂閱可把 URL 中的 @release 改成具體 tag；不要把浮動 branch 稱為「版本鎖定」。
+Pi 將 provider 內嵌在 private candidate，不依賴開機時下載與 CDN 可達性。
 
-- **`release` 分支没有历史**，每次都是全新单 commit 强推。不要在上面手工
-  提交任何东西。
-- **`dist/` 的内容是 release 分支的根**——这就是消费 URL 里没有 `dist/`
-  前缀的原因（`@release/clash/x.list` 而非 `@release/dist/clash/x.list`）。
-- `dist/` 在 `main` 上被 gitignore，本地构建产物永远不进 main。
-- 消费者钉 `@release` 而非 `@main`：`main` 上的半成品编辑永远到不了客户端，
-  只有过了 CI 校验的构建才会发布。
-- 每周定时重建是为了仓库长期没 commit 时 release 分支也保持"新鲜"
-  （CDN/客户端侧看到的 Last-Modified 不至于太老）。
-
-## 端到端延迟与强制刷新
-
-各级缓存叠加（详见 [jsdelivr.md](jsdelivr.md)）：
-
-| 环节 | 延迟 | 能否强制 |
-|---|---|---|
-| CI 构建+发布 | ~1 分钟 | Actions 页面手动 `workflow_dispatch` |
-| jsDelivr 分支缓存 | ≤ 12 小时 | 基本不能（purge 对分支不保证） |
-| 客户端 provider interval | 86400s（示例配置） | 能，见下 |
-
-客户端侧强刷（mihomo REST API，绕过 interval 立即重新下载 provider）：
-
-```bash
-# 刷新单个 rule-provider
-curl -X PUT "http://127.0.0.1:9090/providers/rules/ai" \
-  -H "Authorization: Bearer $CLASH_SECRET"
-
-# 或整体强制重载配置
-curl -X PUT "http://127.0.0.1:9090/configs?force=true" \
-  -H "Authorization: Bearer $CLASH_SECRET"
-```
-
-Shadowrocket：配置页下拉刷新 / 关开规则更新即可。
-
-注意客户端强刷拿到的仍是 **CDN 当前缓存的版本**——如果 jsDelivr 还没过
-12 小时窗口，刷了也还是旧的。真正零延迟验证新规则的办法是临时把 provider
-URL 指向 `raw.githubusercontent.com/.../release/...`（走代理可达）或本地
-文件，确认无误后再切回 CDN。
-
-## 安全模型：规则公开、节点私有
-
-本仓库只放通用路由规则——没有服务器地址、UUID、订阅链接，所以可以放心
-走公共 CDN 明文分发。节点列表属于机密，放在别处（带 header token /
-隐藏路径鉴权），见 DockerCompose-V2Ray 的
-[SelfHostProviders.md](https://github.com/daviddwlee84/DockerCompose-V2Ray/blob/master/docs/clash/SelfHostProviders.md)。
-两者唯一的交点是客户端 base config 同时引用它们。
+回滾 Pi 時使用保留的舊 private profile，重新 proxy-test／proxy-enable 並確認；不更改
+既有 artifact tag、不 force-push 舊歷史。核心 fixture 通過不代表 profile 已經部署，也不代表
+Shadowrocket 實機已驗收。[CDN 背景](jsdelivr.md)仍可參考，但實際可達性需測量。

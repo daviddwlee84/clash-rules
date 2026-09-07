@@ -52,7 +52,7 @@ DOMAIN-SUFFIX,chatgpt.com
 DOMAIN-SUFFIX,oaistatic.com
 DOMAIN-SUFFIX,oaiusercontent.com
 DOMAIN-SUFFIX,sora.com
-DOMAIN-KEYWORD,openai
+# Do not use DOMAIN-KEYWORD,openai: unrelated hostnames can contain this string.
 
 # --- Perplexity ---
 DOMAIN-SUFFIX,perplexity.ai

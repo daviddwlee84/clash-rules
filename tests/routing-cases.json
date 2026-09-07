@@ -1,0 +1,11 @@
+[
+  {"host": "api.anthropic.com", "expected": "AI"},
+  {"host": "platform.claude.com", "expected": "AI"},
+  {"host": "api.openai.com", "expected": "AI"},
+  {"host": "chatgpt.com", "expected": "AI"},
+  {"host": "gemini.google.com", "expected": "AI"},
+  {"host": "www.google.com", "expected": "GENERAL"},
+  {"host": "github.com", "expected": "GENERAL"},
+  {"host": "openai.example.net", "expected": "GENERAL"},
+  {"host": "browser-intake-datadoghq.com", "expected": "GENERAL"}
+]

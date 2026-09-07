@@ -1,22 +1,29 @@
-# clash-rules — single source of truth for Clash/mihomo + Shadowrocket rule-sets.
-# `just` wraps the build/validate steps. https://just.systems/
+# clash-rules: offline data/policy build and private review workflow.
+set positional-arguments
 
-# List available recipes
 default:
     @just --list
 
-# Validate + build all rules/*.list into dist/ (clash + shadowrocket formats)
 build:
-    uv run scripts/build.py
+    python3 scripts/build.py
 
-# Validate only (build also validates; this fails fast without writing dist/)
 check:
-    uv run scripts/build.py >/dev/null
+    python3 scripts/build.py --check
 
-# Show rule counts per category
-stats:
-    @for f in rules/*.list; do printf '%s\t%s\n' "$(basename $f)" "$(grep -cvE '^\s*(#|$)' $f)"; done
+test:
+    python3 -m unittest discover -s tests -v
 
-# Remove build output
-clean:
-    rm -rf dist
+native-check *args:
+    python3 scripts/native_check.py "$@"
+
+sync-upstreams *args:
+    python3 scripts/sync_upstreams.py "$@"
+
+compose-profile *args:
+    python3 scripts/compose_profile.py "$@"
+
+propose-rule *args:
+    python3 scripts/propose_rule.py "$@"
+
+publish-preview:
+    python3 scripts/publish.py

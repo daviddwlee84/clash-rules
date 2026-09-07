@@ -1,44 +1,15 @@
-# 工具链约定：uv 与 just
+# 維護工具
 
-## uv 单文件脚本（PEP 723）
+Python 3.11+ 的標準函式庫負責建置、鏡像驗證、候選與 host core fixture；沒有 pip／uv
+建置依賴。私密 YAML 解析使用 Mike Farah yq v4；CI 將 Linux binary 的 version／SHA-256
+鎖在 tooling.lock.json。just 只是轉送引數的薄封裝。
 
-本项目所有 Python 一律是 [uv](https://docs.astral.sh/uv/) 可直接运行的
-单文件脚本，不维护 `requirements.txt` / `pyproject.toml` / venv。
+- just check：離線驗證，不寫 dist。
+- just build：產生內容定址 artifact；拒絕 dist 中不受管理的檔案。
+- just test：unit tests；YAML 重複 key、私密權限、政策保留與鏡像竄改等。
+- just native-check --download：首次下載鎖定 core；後續省略該旗標，使用驗 hash 的 cache。
+- just sync-upstreams：明確 fetch → review → promote；不與日常 build 混合。
+- just compose-profile / propose-rule：新私密檔案 exclusive 寫入；不自動套用。
+- just publish-preview：預覽 release/tag；不提交或連線發布。
 
-脚本头部模板（[scripts/build.py](../scripts/build.py)）：
-
-```python
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = []
-# ///
-```
-
-- `# /// script ... ///` 是 [PEP 723](https://peps.python.org/pep-0723/)
-  内联元数据：声明 Python 版本下限和第三方依赖，uv 运行时自动解析、
-  按需建临时环境。
-- 运行方式：`uv run scripts/build.py`（或 `chmod +x` 后直接执行，shebang
-  的 `-S` 让 env 能传多个参数给 uv）。
-- 以后需要第三方库时**只改 `dependencies` 列表**，例如
-  `# dependencies = ["httpx", "pyyaml"]`——不需要任何安装步骤，uv 第一次
-  运行时自动装好并缓存。
-- CI 用 [astral-sh/setup-uv](https://github.com/astral-sh/setup-uv) 装 uv，
-  不再需要 `actions/setup-python`（uv 会按 `requires-python` 自动取
-  合适的 Python）。
-
-## just
-
-[just](https://just.systems/) 是命令别名层（比 make 干净，无依赖追踪语义）。
-[Justfile](../Justfile) 提供：
-
-| 命令 | 作用 |
-|---|---|
-| `just` | 列出所有 recipe |
-| `just build` | `uv run scripts/build.py`：校验 + 产出 `dist/` |
-| `just check` | 同上但丢弃输出，纯校验快速失败 |
-| `just stats` | 各类别规则行数统计 |
-| `just clean` | 删除 `dist/` |
-
-日常改规则的最小闭环：编辑 `rules/<cat>.list` → `just build` → commit/push
-→ CI 自动发布（见 [release-pipeline.md](release-pipeline.md)）。
+沒有 broad clean 指令。保留 private baseline、候選與 rollback 資料，避免維護時誤刪。

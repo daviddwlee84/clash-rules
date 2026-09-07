@@ -1,3 +1,7 @@
+> 目前建置器刻意只接受 DOMAIN、DOMAIN-SUFFIX、DOMAIN-KEYWORD、IP-CIDR、IP-CIDR6。
+> CIDR 可加 no-resolve，檔案不可包含 policy。下方其他語法是核心背景，不表示本 repo 已支援輸出。
+> Pi inline provider 與離線 workflow 見 [architecture.md](architecture.md)。
+
 # 规则语法与客户端兼容性
 
 ## 为什么源文件是 "classical 减策略" 格式

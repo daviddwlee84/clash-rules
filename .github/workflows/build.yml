@@ -1,39 +1,55 @@
-name: Build & Publish
+name: Validate and publish rules
 
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  schedule:
-    # Weekly rebuild keeps the release branch fresh even without commits
-    - cron: "0 2 * * 1"
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install locked YAML parser
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, json, os, pathlib, urllib.request
+          lock = json.loads(pathlib.Path('tooling.lock.json').read_text())['yaml_parser']
+          data = urllib.request.urlopen(lock['url'], timeout=45).read()
+          if hashlib.sha256(data).hexdigest() != lock['sha256']:
+              raise SystemExit('YAML parser checksum mismatch')
+          directory = pathlib.Path(os.environ['RUNNER_TEMP']) / 'clash-tools'
+          directory.mkdir()
+          path = directory / 'yq'
+          path.write_bytes(data)
+          path.chmod(0o700)
+          with open(os.environ['GITHUB_PATH'], 'a') as out:
+              out.write(str(directory) + '\n')
+          PYTHON
+      - name: Unit and offline build checks
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 scripts/build.py --check
+          python3 scripts/publish.py
+      - name: Pinned native Mihomo fixture
+        run: python3 scripts/native_check.py --download
+
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    concurrency:
+      group: rules-release
+      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v6
-
-      - name: Validate & build
-        # PEP 723 inline metadata in the script pins the Python version
-        run: uv run scripts/build.py
-
-      - name: Publish dist/ to the release branch
-        # Same pattern as Loyalsoldier/clash-rules: consumers pin @release so
-        # main can change freely without breaking clients mid-edit.
-        if: github.event_name != 'pull_request'
-        run: |
-          cd dist
-          git init -b release
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "build: ${GITHUB_SHA::7} $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Preserve release history and create immutable artifact tag
+        run: python3 scripts/publish.py --publish

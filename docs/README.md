@@ -1,12 +1,11 @@
-# docs/ — 项目知识库
+# 專案知識庫
 
-本项目相关的背景知识与维护笔记，按主题分类。改动规则本身不需要读这些；
-排查"为什么客户端没更新 / URL 404 / 规则不生效"时再来翻。
-
-| 文档 | 内容 |
+| 文件 | 用途 |
 |---|---|
-| [jsdelivr.md](jsdelivr.md) | jsDelivr CDN：URL 结构、缓存策略、purge API 的真实限制、大陆可达性与备用镜像 |
-| [release-pipeline.md](release-pipeline.md) | 从 `git push` 到客户端生效的完整链路：CI、release 分支模式、各级缓存与强制刷新 |
-| [rule-syntax.md](rule-syntax.md) | classical 规则语法、rule-provider 的 behavior/format 组合、各客户端兼容性 |
-| [ai-endpoints.md](ai-endpoints.md) | `rules/ai.list` 的维护笔记：各 AI 厂商的域名/端点、如何发现新域名 |
-| [tooling.md](tooling.md) | uv（PEP 723 单文件脚本）与 just 的用法约定 |
+| [architecture.md](architecture.md) | 公私邊界、離線鏡像、profile 組合與候選流程 |
+| [diagnosis.md](diagnosis.md) | 術語、DNS／路由／HTTP 分層判讀與官方 template |
+| [release-pipeline.md](release-pipeline.md) | 內容版本、保留 release 歷史、不可變 tag 與回滾 |
+| [rule-syntax.md](rule-syntax.md) | classical／provider 格式；以目前 validator 支援集合為準 |
+| [ai-endpoints.md](ai-endpoints.md) | AI 端點歷史維護筆記；新增仍需 review |
+| [jsdelivr.md](jsdelivr.md) | CDN 快取背景；可達性不可假設 |
+| [tooling.md](tooling.md) | Python、yq 與 just 命令 |

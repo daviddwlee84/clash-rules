@@ -1,102 +1,52 @@
 # clash-rules
 
-Personal, categorized proxy rule-sets — **single source of truth, built once,
-consumed by every client** (Clash / mihomo, Shadowrocket, …).
+個人分流政策、鎖定的上游資料與診斷知識庫。公開規則由 Git 管理；節點、訂閱、API
+credential、裝置設定與瀏覽紀錄留在 ignored private/。目前以
+[RPi-ImmortalWrt](https://github.com/daviddwlee84/RPi-ImmortalWrt) 的 Nikki/Mihomo 作為第一個 dogfood 用戶端。
 
-Companion to [DockerCompose-V2Ray](https://github.com/daviddwlee84/DockerCompose-V2Ray)
-(the server side). The design follows the best practices researched in
-[`docs/clash/SelfHostProviders.md`](https://github.com/daviddwlee84/DockerCompose-V2Ray/blob/master/docs/clash/SelfHostProviders.md)
-— maintain rules in one git repo, convert with one build step, publish to fixed
-URLs, and point all clients there. Update once → everything applies.
+本 repo 保留自訂政策與 review 流程；通用域名／IP 分類鏡像自
+[MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)，不另造大型分類資料庫。
+鏡像與個人政策分開更新，建置不需連線。
 
-```mermaid
-flowchart LR
-  src["rules/*.list<br/>(source of truth, classical)"]
-  src -->|"scripts/build.py (CI)"| dist["dist/<br/>clash/*.list|yaml + shadowrocket/*.list"]
-  dist -->|"push to release branch"| cdn["jsDelivr CDN<br/>@release fixed URLs"]
-  cdn --> clash["Clash / mihomo<br/>rule-providers"]
-  cdn --> sr["Shadowrocket<br/>RULE-SET"]
-  cdn --> other["other clients"]
-```
-
-## Layout
-
-| Path | Purpose |
+| 路徑 | 責任 |
 |---|---|
-| `rules/*.list` | **The only files you edit.** One category per file, classical syntax (rule **minus** policy — policy comes from the `RULE-SET,<name>,<policy>` line in each client's base config). `#` comments allowed. |
-| `scripts/build.py` | Validates every line, then emits per-client formats into `dist/`. Fails CI on any malformed rule. PEP 723 [uv](https://docs.astral.sh/uv/) script — run with `uv run`. |
-| `examples/clash.yaml` | How to consume via mihomo `rule-providers` + `RULE-SET`. |
-| `examples/shadowrocket.conf` | How to consume the same lists from Shadowrocket. |
-| `docs/` | Knowledge base: jsDelivr caching/purge & China reachability, release pipeline, rule syntax, AI endpoint notes, tooling. Start at [`docs/README.md`](docs/README.md). |
-| `.github/workflows/build.yml` | CI: validate + build on every push, publish `dist/` to the **`release`** branch (Loyalsoldier-style). |
-| `Justfile` | `just build` / `just check` / `just stats`. |
+| rules/*.list | 個人分類；TYPE,payload，不含出口政策 |
+| vendor/metacubex/、upstreams.lock.json | 指定 commit 的資料／授權／來源說明與逐檔 SHA-256 |
+| scripts/build.py、dist/ | 離線驗證、去重、重疊報告、跨用戶端 artifact 與內容版本 |
+| scripts/compose_profile.py | 已驗證私密基底加上 AI 固定 leaf node；保留一般群組與順序 |
+| scripts/propose_rule.py | 診斷報告轉精確 domain 候選；人工 review 後才改政策 |
+| scripts/native_check.py、tests/ | 鎖定 Mihomo 1.19.27 的語法與 localhost 路由 fixture |
+| docs/ | 術語、FAQ、官方設定參考與版本／私密資料流程 |
 
-## Categories
-
-| File | Intended policy | Content |
-|---|---|---|
-| `ai.list` | `AI` group | AI services (OpenAI/Claude/Cursor/Gemini/Copilot/…) — geo-blocked by IP, pin to US/JP/SG nodes |
-| `reject.list` | `REJECT` | ISP hijacking, malware, fake-software (思杰马克丁) domains/IPs |
-| `proxy.list` | `PROXY` | DNS-pollution-protected & blocked sites (Google/Meta/Telegram/…) |
-| `direct.list` | `DIRECT` | Mainland-China services, CDNs, scholar sites, private trackers |
-| `media-global.list` | media group | International streaming (Netflix/YouTube/Disney+/Spotify/…) |
-| `media-hkmt.list` | media group | Mainland media with HK/MO/TW-only licensing (bilibili/iQiyi) |
-| `apple.list` | `Apple` group | Apple services (choose DIRECT or PROXY per region) |
-
-Base-config-only rules (`GEOIP,CN`, `MATCH`/`FINAL`, LAN handled by GEOIP/private
-defaults) intentionally stay **out** of the rule-sets — see the examples.
-
-## Daily workflow
-
-1. Edit the relevant `rules/<category>.list` (add a line, commit).
-2. Push to `main` → CI validates, builds, force-pushes `dist/` to `release`.
-3. Every client refreshes automatically on its provider `interval`
-   (or trigger immediately: `curl -X PUT 'http://127.0.0.1:9090/configs?force=true' -H "Authorization: Bearer $CLASH_SECRET"`).
-
-Local check before pushing:
-
-```bash
-just build   # or: uv run scripts/build.py
+```sh
+just check                       # 完全離線；不寫 dist/
+just test
+just build
+just native-check --download     # 首次明確下載並驗 hash；之後省略 --download
+just publish-preview            # 不建立 commit、不 push
 ```
 
-## Consuming
+Python 3.11+ 為基礎工具；私密 YAML 組合另需 Mike Farah yq v4。完整流程見
+[架構與操作](docs/architecture.md)、[診斷知識](docs/diagnosis.md) 與
+[版本發布](docs/release-pipeline.md)。CI 只有 main 通過驗證後才更新 release 分支，保留歷史，
+並建立不可覆寫的 rules-<完整內容 SHA-256> tag；此次工作本身不會觸發遠端發布。
 
-Fixed URLs (jsDelivr CDN over the `release` branch — more GFW-reachable than
-raw.githubusercontent.com):
+## 分類
 
-```text
-https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/clash/<category>.list
-https://cdn.jsdelivr.net/gh/daviddwlee84/clash-rules@release/shadowrocket/<category>.list
-```
+ai、apple、reject、direct、proxy、media-global、media-hkmt 為自訂分類。
+政策由用戶端 RULE-SET 的第三欄決定；跨分類重複可能是有意義的，不會自動刪除。
+自訂清單最初來自 DockerCompose-V2Ray 的 legacy CFW example（歷史來源可查 Git），
+不能把舊域名的存在當成今日服務擁有權或封鎖證據。
 
-See [`examples/clash.yaml`](examples/clash.yaml) and
-[`examples/shadowrocket.conf`](examples/shadowrocket.conf) for complete wiring.
+既有訂閱範例 [Clash](examples/clash.yaml)／[Shadowrocket](examples/shadowrocket.conf)
+仍示範浮動 release URL。受管理 Pi 使用離線內嵌 profile 與既有 transaction；其他 clients
+若要可回滾版本，將 URL 的 @release 換成具體 rules-<SHA-256> tag。CDN 可達性與快取均需實測。
 
-## Principles (why it looks like this)
+<!-- project-knowledge-harness:readme-roadmap -->
+後續工作統一列在 [TODO.md](TODO.md)，分析留在 [backlog/](backlog/)，排錯經驗留在
+[pitfalls/](pitfalls/)。相關服務端專案為
+[DockerCompose-V2Ray](https://github.com/daviddwlee84/DockerCompose-V2Ray)。
+<!-- project-knowledge-harness:readme-roadmap (end) -->
 
-- **Rules are public, nodes are private.** This repo holds only generic
-  routing rules — no server addresses, UUIDs, or subscriptions. Node lists
-  live elsewhere behind auth (header token / hidden path), per
-  [SelfHostProviders.md](https://github.com/daviddwlee84/DockerCompose-V2Ray/blob/master/docs/clash/SelfHostProviders.md).
-- **One classical syntax feeds all clients.** Clash `behavior: classical,
-  format: text` and Shadowrocket `RULE-SET` accept the same `TYPE,value`
-  lines, so the "build" is validation + fan-out, not translation.
-- **Consumers pin `@release`, not `main`.** A broken edit on `main` can never
-  reach clients — only a green CI build can.
-- **Stand on giants for the generic stuff.** For broad categories consider
-  layering [Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules),
-  [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) (`.mrs`), or
-  [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)
-  in your base config, and keep only *personal* categories here.
-
-## Provenance
-
-Initial content migrated from
-[DockerCompose-V2Ray `legacy/example/clash_for_windows.yml`](https://github.com/daviddwlee84/DockerCompose-V2Ray/blob/master/legacy/example/clash_for_windows.yml)
-(itself derived from common community rule lists circa 2020) via a one-shot
-`scripts/migrate_from_legacy.py` (since deleted — see git history): 1272 rules
-across 6 categories.
-
-## License
-
-[MIT](LICENSE)
+本 repo 自有內容沿用 [MIT](LICENSE)；第三方鏡像保留上游授權與來源，見
+[THIRD_PARTY.md](THIRD_PARTY.md)。不要將 vendor/ 一概視為 MIT。

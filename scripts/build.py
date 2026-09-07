@@ -1,116 +1,73 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = []
-# ///
-"""Build categorized rule-set sources (`rules/*.list`) into per-client
-output formats under `dist/`.
-
-Single source of truth -> one build -> many client formats:
-
-    rules/<cat>.list  (classical, hand-maintained)
-        -> dist/clash/<cat>.list   (Clash/mihomo: behavior classical, format text)
-        -> dist/clash/<cat>.yaml   (Clash/mihomo: behavior classical, format yaml)
-        -> dist/shadowrocket/<cat>.list  (Shadowrocket RULE-SET)
-
-The classical text body is identical across Clash and Shadowrocket, so a
-single maintained list feeds every client — no per-client patching.
-
-Validates each line first; exits non-zero on any bad rule so CI fails loudly.
-Pure stdlib, no dependencies. PEP 723 uv script — run via `uv run`.
-
-Usage:
-    uv run scripts/build.py
-"""
-from __future__ import annotations
-
-import sys
+#!/usr/bin/env python3
+"""Build offline rule artifacts, or --check without writing output. Python 3.12+."""
+import argparse
+import json
 from pathlib import Path
+import sys
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = REPO_ROOT / "rules"
-DIST = REPO_ROOT / "dist"
-
-# rule types valid inside a classical rule-provider / Shadowrocket RULE-SET
-ALLOWED_TYPES = {
-    "DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD", "DOMAIN-WILDCARD", "DOMAIN-REGEX",
-    "IP-CIDR", "IP-CIDR6", "IP-SUFFIX", "IP-ASN", "GEOIP",
-    "DST-PORT", "SRC-PORT", "SRC-IP-CIDR", "PROCESS-NAME", "PROCESS-PATH",
-    "USER-AGENT", "URL-REGEX", "AND", "OR", "NOT",
-}
-# never valid inside a rule-set (these are top-level routing constructs)
-FORBIDDEN_TYPES = {"MATCH", "RULE-SET", "SUB-RULE", "FINAL"}
+from ruleslib import ROOT, audit, mirror_check, read_rules, sha256, validate_rule
 
 
-def read_rules(path: Path) -> list[str]:
-    lines = []
-    for raw in path.read_text().splitlines():
-        s = raw.strip()
-        if not s or s.startswith("#"):
-            continue
-        lines.append(s)
-    return lines
+def build(output=None):
+    lock = mirror_check()
+    categories = {p.stem: read_rules(p) for p in sorted((ROOT / "rules").glob("*.list"))}
+    if not categories:
+        raise ValueError("no rule sources")
+    for category, rules in categories.items():
+        for index, rule in enumerate(rules, 1):
+            try:
+                validate_rule(rule)
+            except ValueError as exc:
+                raise ValueError(f"{category}:{index}: {exc}") from exc
+    review = audit(categories)
+    artifacts = {}
+    counts = []
+    for category, original in categories.items():
+        rules = list(dict.fromkeys(original))
+        counts.append(f"{category}\t{len(rules)}")
+        banner = f"# {category} | {len(rules)} rules | https://github.com/daviddwlee84/clash-rules\n"
+        text = (banner + "\n".join(rules) + "\n").encode()
+        artifacts[f"clash/{category}.list"] = text
+        artifacts[f"shadowrocket/{category}.list"] = text
+        artifacts[f"clash/{category}.yaml"] = (banner + "payload:\n" + "".join(
+            "  - " + json.dumps(rule, ensure_ascii=False) + "\n" for rule in rules)).encode()
+    artifacts["MANIFEST.txt"] = ("category\trules\n" + "\n".join(counts) + "\n").encode()
+    artifacts["review.json"] = (json.dumps(review, ensure_ascii=False, indent=2) + "\n").encode()
+    artifacts["upstreams.lock.json"] = (ROOT / "upstreams.lock.json").read_bytes()
+    artifacts["LICENSE"] = (ROOT / "LICENSE").read_bytes()
+    artifacts["THIRD_PARTY.md"] = (ROOT / "THIRD_PARTY.md").read_bytes()
+    for entry in lock["files"]:
+        artifacts[entry["path"]] = (ROOT / entry["path"]).read_bytes()
+    entries = {name: sha256(data) for name, data in sorted(artifacts.items())}
+    version = sha256(json.dumps(entries, sort_keys=True, separators=(",", ":")).encode())
+    manifest = {"schema": 1, "version": version, "files": entries,
+                "categories": {key: len(set(value)) for key, value in categories.items()}}
+    artifacts["manifest.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+    if output:
+        output = Path(output)
+        if output.is_symlink():
+            raise ValueError("output must not be a symlink")
+        if output.exists():
+            existing = {str(p.relative_to(output)) for p in output.rglob("*") if p.is_file() or p.is_symlink()}
+            if existing - set(artifacts) or any(p.is_symlink() for p in output.rglob("*")):
+                raise ValueError("output contains unmanaged files or symlinks; use a new output directory")
+        for name, data in artifacts.items():
+            target = output / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+    return manifest
 
 
-def validate(cat: str, lines: list[str]) -> list[str]:
-    errors = []
-    for i, line in enumerate(lines, 1):
-        rtype = line.split(",", 1)[0].upper()
-        if rtype in FORBIDDEN_TYPES:
-            errors.append(f"{cat}:{i}: '{rtype}' not allowed in a rule-set: {line}")
-        elif rtype not in ALLOWED_TYPES:
-            errors.append(f"{cat}:{i}: unknown rule type '{rtype}': {line}")
-    return errors
-
-
-def main() -> int:
-    sources = sorted(RULES_DIR.glob("*.list"))
-    if not sources:
-        print("no rules/*.list found", file=sys.stderr)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--output", default=str(ROOT / "dist"))
+    args = parser.parse_args()
+    try:
+        print(json.dumps(build(None if args.check else args.output), sort_keys=True))
+    except (ValueError, OSError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 1
-
-    all_errors: list[str] = []
-    parsed: dict[str, list[str]] = {}
-    for src in sources:
-        cat = src.stem
-        lines = read_rules(src)
-        # dedupe, preserve order
-        seen, uniq = set(), []
-        for ln in lines:
-            if ln not in seen:
-                seen.add(ln)
-                uniq.append(ln)
-        parsed[cat] = uniq
-        all_errors += validate(cat, uniq)
-
-    if all_errors:
-        print("VALIDATION FAILED:", file=sys.stderr)
-        print("\n".join(all_errors), file=sys.stderr)
-        return 1
-
-    clash_dir = DIST / "clash"
-    sr_dir = DIST / "shadowrocket"
-    clash_dir.mkdir(parents=True, exist_ok=True)
-    sr_dir.mkdir(parents=True, exist_ok=True)
-
-    manifest = []
-    for cat, lines in sorted(parsed.items()):
-        banner = f"# {cat} | {len(lines)} rules | https://github.com/daviddwlee84/clash-rules"
-        text_body = banner + "\n" + "\n".join(lines) + "\n"
-        yaml_body = banner + "\npayload:\n" + "".join(f"  - '{ln}'\n" for ln in lines)
-
-        (clash_dir / f"{cat}.list").write_text(text_body)
-        (clash_dir / f"{cat}.yaml").write_text(yaml_body)
-        (sr_dir / f"{cat}.list").write_text(text_body)
-        manifest.append(f"{cat}\t{len(lines)}")
-
-    (DIST / "MANIFEST.txt").write_text(
-        "category\trules\n" + "\n".join(manifest) + "\n"
-    )
-    total = sum(len(v) for v in parsed.values())
-    print(f"built {len(parsed)} categories, {total} rules total -> {DIST}")
-    for line in manifest:
-        print("  " + line.replace("\t", ": "))
     return 0
 
 
