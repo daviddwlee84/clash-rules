@@ -69,6 +69,21 @@ def native_test(core, path, home):
         raise ValueError("native Mihomo validation failed; private diagnostic output suppressed")
 
 
+def http_fixture_probe(port, host, timeout=3):
+    request = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout)
+    try:
+        # HTTP forwarding forces an outbound dial; CONNECT may be acknowledged lazily.
+        request.request("GET", "http://" + host + "/", headers={"Connection": "close"})
+        response = request.getresponse()
+        outcome = {"status": response.status, "reason": response.reason}
+        response.read(4096)
+        return outcome
+    except OSError as error:
+        return {"error": type(error).__name__}
+    finally:
+        request.close()
+
+
 def fixture(core):
     seen = []
     servers = []
@@ -154,20 +169,21 @@ def fixture(core):
             time.sleep(.05)
         else:
             raise ValueError("fixture core readiness timed out")
+        # ApplyConfig loads rule providers before runtime.GC and tunnel.OnRunning.
+        # Positive forwarding to our local sink proves the tunnel is running too.
+        readiness_host = "fixture-readiness.invalid"
+        while time.monotonic() < deadline:
+            http_fixture_probe(port, readiness_host, timeout=.2)
+            if (readiness_host, "GENERAL") in seen:
+                break
+            if process.poll() is not None:
+                raise ValueError("fixture core exited during forwarding readiness")
+            time.sleep(.05)
+        else:
+            raise ValueError("fixture forwarding readiness timed out")
         cases = json.loads((ROOT / "tests/routing-cases.json").read_text())
         for case in cases:
-            request = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-            outcome = None
-            try:
-                # HTTP forwarding forces an outbound dial; CONNECT can be acknowledged lazily.
-                request.request("GET", "http://" + case["host"] + "/", headers={"Connection": "close"})
-                response = request.getresponse()
-                outcome = {"status": response.status, "reason": response.reason}
-                response.read(4096)
-            except OSError as error:
-                outcome = {"error": type(error).__name__}
-            finally:
-                request.close()
+            outcome = http_fixture_probe(port, case["host"])
             observed_deadline = time.monotonic() + 2
             while not any(host == case["host"] for host, _ in seen) and time.monotonic() < observed_deadline:
                 time.sleep(.01)

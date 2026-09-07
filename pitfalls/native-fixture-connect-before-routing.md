@@ -13,3 +13,16 @@
 
 另外修正 temporary directory 的清理順序：先停止 child core，再清理其 home，避免初始化
 尚在寫 cache 時得到 `OSError: [Errno 66] Directory not empty`。修正後連續三次各 9 個案例通過。
+
+
+## Linux CI 後續確認
+
+只等 ruleCount 仍不足：Linux CI 曾再次出現同一錯誤，而增加 logging 後重跑又通過。
+[Mihomo v1.19.27 ApplyConfig](https://github.com/MetaCubeX/mihomo/blob/v1.19.27/hub/executor/executor.go)
+在 loadProvider(ruleProviders) 之後還會做 runtime.GC，最後才呼叫 tunnel.OnRunning。
+因此 provider 已可查詢，不代表 tunnel 已開始接受轉發。
+
+現在啟動時先對 fixture-readiness.invalid 做有期限的本機轉發探針，只有 GENERAL localhost
+sink 真正收到它才開始 9 個正式案例。這個 probe 不對外連線，正式案例不因失敗而重試或放寬；
+失敗時會回報 public fixture 的 HTTP outcome 與 bounded core log，private profile 的 native
+parser 輸出仍不公開。
