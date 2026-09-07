@@ -71,6 +71,17 @@ Pi 的 profile transaction 要先停用代理才能 proxy-test；proxy-enable �
 確認後才算套用。失敗回復的是 pre-enable（代理關閉）狀態，舊版本需重新 test／enable。
 保留舊 source 與復原指令，安排能接受短暫中斷的時段。不要直接 API reload。
 
+這是**完整 profile／AI candidate** 的流程。若受管 Pi 的裝置 repo 已提供 `just proxy-rules`，
+日常精確 DOMAIN 可從本 repo 的 `rules/proxy.list` 選出完整集合，交給裝置端的 provider
+交易：先 prepare／dry-run、保存私有復原收據，再 apply。首次 provider 遷移與後續 file
+provider refresh 分開；裝置端負責設定差異限制、native parser、SHA-256、TLS API、
+watchdog 及 strict confirmation。本 repo 不保存設備憑證，也不自行向 controller 發部署命令。
+
+SEF 文書查詢採 `DOMAIN,sefapplyap.sef.org.tw`，依單站診斷加入精確例外；不擴大到 `.tw`
+或所有政府網站。規則資料回復不等於完整 profile bytes 回復；首次遷移後回復空集合仍保留
+provider wiring。來源清單 SHA-256、生成 artifact version 與裝置實際載入的 subset digest
+應分別記錄，不能把它們視為同一個版本。
+
 AI leaf 的手動固定可避免 url-test 自動改節點；供應商仍可能改變出口 IP。既有 Pi fail-open
 不變，這不是 kill switch、固定公網 IP 承諾或避免帳號風險保證。
 

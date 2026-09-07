@@ -6,7 +6,7 @@
 - rules/ owns personal policy; vendor/ is byte-preserved upstream data. Update mirrors only through fetch/review/promote; never bypass a lock mismatch or relabel vendor licenses.
 - Offline build must remain deterministic. Validate with just check, just test and pinned native fixture; do not claim hardware or Shadowrocket acceptance from host tests.
 - AI fixed policy points directly to a concrete leaf node; retain general groups and order. No automatic failover or kill-switch claim.
-- Never deploy through a controller API on a managed Pi. Follow its strict SSH, controller TLS and proxy transaction contract.
+- Never deploy through ad hoc controller API calls on a managed Pi. Hand reviewed rules to its managed rule-update transaction; follow its strict SSH, controller TLS, snapshot and confirmation contract.
 - Use TODO.md as the only future-work index. Run project-knowledge-harness add-todo.sh from this repo; long analysis belongs in backlog/, past debugging in pitfalls/.
 
 

@@ -2,6 +2,9 @@
 # Migrated from DockerCompose-V2Ray legacy Clash config.
 # Classical rule-set format (rule minus policy). Maintain by hand.
 
+# SEF document inquiry: domain-proxy GET succeeds where the current direct path fails.
+DOMAIN,sefapplyap.sef.org.tw
+
 DOMAIN-SUFFIX,ampproject.org
 DOMAIN-SUFFIX,appspot.com
 DOMAIN-SUFFIX,blogger.com
