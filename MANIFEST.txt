@@ -1,5 +1,5 @@
 category	rules
-ai	30
+ai	29
 apple	15
 direct	342
 media-global	150

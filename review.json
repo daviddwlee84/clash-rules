@@ -1,0 +1,103 @@
+{
+  "duplicates": [
+    {
+      "rule": "DOMAIN-SUFFIX,bilibili.com",
+      "categories": [
+        "direct",
+        "media-hkmt"
+      ]
+    },
+    {
+      "rule": "DOMAIN-SUFFIX,nicovideo.jp",
+      "categories": [
+        "media-global",
+        "proxy"
+      ]
+    },
+    {
+      "rule": "DOMAIN-SUFFIX,soundcloud.com",
+      "categories": [
+        "media-global",
+        "proxy"
+      ]
+    },
+    {
+      "rule": "DOMAIN-SUFFIX,viu.tv",
+      "categories": [
+        "media-global",
+        "proxy"
+      ]
+    },
+    {
+      "rule": "DOMAIN-SUFFIX,deepmind.com",
+      "categories": [
+        "ai",
+        "proxy"
+      ]
+    }
+  ],
+  "earlier_suffix_coverage": [],
+  "broad_keywords": [
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,spotify.com"
+    },
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,-spotify-com"
+    },
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,avoddashs"
+    },
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,bbcfmt"
+    },
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,uk-live"
+    },
+    {
+      "category": "media-global",
+      "rule": "DOMAIN-KEYWORD,voddazn"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,google"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,blogspot"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,facebook"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,twitter"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,github"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,jav"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,pinterest"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,porn"
+    },
+    {
+      "category": "proxy",
+      "rule": "DOMAIN-KEYWORD,wikileaks"
+    }
+  ],
+  "note": "Cross-category overlaps depend on client policy order; review, do not delete automatically."
+}

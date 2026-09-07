@@ -1,4 +1,4 @@
-# ai | 30 rules | https://github.com/daviddwlee84/clash-rules
+# ai | 29 rules | https://github.com/daviddwlee84/clash-rules
 DOMAIN-SUFFIX,anthropic.com
 DOMAIN-SUFFIX,claude.ai
 DOMAIN-SUFFIX,claude.com
@@ -23,7 +23,6 @@ DOMAIN-SUFFIX,chatgpt.com
 DOMAIN-SUFFIX,oaistatic.com
 DOMAIN-SUFFIX,oaiusercontent.com
 DOMAIN-SUFFIX,sora.com
-DOMAIN-KEYWORD,openai
 DOMAIN-SUFFIX,perplexity.ai
 DOMAIN-SUFFIX,pplx.ai
 DOMAIN-SUFFIX,poe.com
