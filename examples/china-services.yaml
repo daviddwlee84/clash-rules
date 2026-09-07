@@ -1,0 +1,26 @@
+# 合併片段，非完整 profile；先審查既有 routing/DNS 例外。
+# path 相對於 Mihomo core home；來源已由 upstreams.lock.json 驗 hash。
+rule-providers:
+  china-services:
+    type: file
+    behavior: domain
+    format: text
+    path: ./vendor/metacubex/geo/geosite/cn.list
+
+proxy-groups:
+  - name: ChinaServices
+    type: select
+    proxies:
+      - DIRECT
+      # 境外使用時，在私密 profile 加入已驗收的中國大陸出口。
+
+rules:
+  # 插入於明確例外／專用媒體政策之後，GEOIP/MATCH 兜底之前。
+  - RULE-SET,china-services,ChinaServices
+
+dns:
+  nameserver-policy:
+    # DNS 與此類服務的出口一起切換；不改整個 profile 的 DNS。
+    "rule-set:china-services":
+      - "https://223.5.5.5/dns-query#ChinaServices"
+      - "https://223.6.6.6/dns-query#ChinaServices"

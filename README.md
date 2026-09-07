@@ -33,6 +33,9 @@ Python 3.11+ 為基礎工具；私密 YAML 組合另需 Mike Farah yq v4。完�
 
 ## 分類
 
+境內服務可用獨立 `ChinaServices` 群組（預設 DIRECT），重用鎖定的 geosite/cn provider，
+配合該分類的 DNS 選點；見[境內服務設計](docs/china-services.md)與[合併片段](examples/china-services.yaml)。
+
 ai、apple、reject、direct、proxy、media-global、media-hkmt 為自訂分類。
 政策由用戶端 RULE-SET 的第三欄決定；跨分類重複可能是有意義的，不會自動刪除。
 自訂清單最初來自 DockerCompose-V2Ray 的 legacy CFW example（歷史來源可查 Git），

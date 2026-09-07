@@ -61,3 +61,8 @@ MRS 適用 domain／ipcidr provider，不能把包含各種 TYPE 的 classical �
 
 [Pi 操作流程](https://github.com/daviddwlee84/RPi-ImmortalWrt/blob/main/docs/clash-diagnostics.md)
 只保存該裝置的 SSH、private CA、TPROXY 與 transaction 邊界；本頁是跨裝置知識的維護位置。
+
+## 境內服務很慢但已經 DIRECT
+
+先觀測實際 chain，再檢查 DNS 是否經海外出口、CDN 答案，以及 client 與 router 的差異。
+分類、出口切換和 DNS 配套見[境內服務設計](china-services.md)；不要只新增 DIRECT 規則就宣稱修復。
