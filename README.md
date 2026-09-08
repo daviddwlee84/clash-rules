@@ -16,6 +16,7 @@ credential、裝置設定與瀏覽紀錄留在 ignored private/。目前以
 | scripts/compose_profile.py | 已驗證私密基底加上 AI 固定 leaf node；保留一般群組與順序 |
 | scripts/propose_rule.py | 診斷報告轉精確 domain 候選；人工 review 後才改政策 |
 | scripts/native_check.py、tests/ | 鎖定 Mihomo 1.19.27 的語法與 localhost 路由 fixture |
+| scripts/china_research.py | 私密 DNS/CDN 報告與不可直接部署的 ChinaServices 候選 |
 | docs/ | 術語、FAQ、官方設定參考與版本／私密資料流程 |
 
 ```sh

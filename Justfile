@@ -27,3 +27,7 @@ propose-rule *args:
 
 publish-preview:
     python3 scripts/publish.py
+
+# Offline analysis and private research candidates; never deploys.
+china-research *args:
+    python3 scripts/china_research.py "$@"

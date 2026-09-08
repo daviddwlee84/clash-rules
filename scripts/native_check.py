@@ -217,6 +217,8 @@ def main():
         build()
         core = core_path(args.download)
         cases = fixture(core)
+        from china_native_fixture import fixture as china_fixture
+        china_cases = china_fixture(core)
         digest = None
         if args.profile:
             raw = read_private(args.profile)
@@ -227,7 +229,7 @@ def main():
                 with os.fdopen(fd, "wb") as output:
                     output.write(raw)
                 native_test(core, path, directory)
-        print(json.dumps({"native_version": "1.19.27", "routing_cases_passed": cases,
+        print(json.dumps({"native_version": "1.19.27", "routing_cases_passed": cases, "china_dns_routing_cases_passed": china_cases,
                           "private_profile_sha256": digest, "hardware_validation": "not-performed"}))
     except Exception as error:
         message = str(error) if type(error) is ValueError else "native check failed: " + type(error).__name__
