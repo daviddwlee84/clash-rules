@@ -5,12 +5,12 @@
     "direct": 342,
     "media-global": 150,
     "media-hkmt": 3,
-    "proxy": 553,
+    "proxy": 554,
     "reject": 210
   },
   "files": {
     "LICENSE": "44cdbcbfb30e89594d35e77027d646ff6463e7ef6ad9be0cee2e935b8fdec1b8",
-    "MANIFEST.txt": "30e4c9350d7c6adf6f34e7e0555892335df82aab8e690274d61bdf6ec7e1897e",
+    "MANIFEST.txt": "a2201997fe2fb09fb532bd5eb83343dc05fe9a55aa60dcef4a873448e76c443e",
     "THIRD_PARTY.md": "da096091915895c9d0932aa2bb964488c985aee3f347cffbe9b2c07c6f7eed53",
     "clash/ai.list": "28126d26f19eb25b11079c905fa8ad2c54f4e9d057283a1086157bd20e130d8e",
     "clash/ai.yaml": "51155ffc23f4e7a974d8ebea8937df2440642c50d7fa2e1c23547912698ce6cb",
@@ -22,8 +22,8 @@
     "clash/media-global.yaml": "a8b3ace3b13dfc8eeff93905d3be215bfacee285d1ff1a401ae1823ff31449c7",
     "clash/media-hkmt.list": "60ce49cec9ceb7ed11ccfdce5a25dea8c6eb0a79c9dada6335c43386c10aa97f",
     "clash/media-hkmt.yaml": "30b5e46df261efe9e1144a2e592973b9aa146890d16df5ad80b0487c1104d295",
-    "clash/proxy.list": "539fd1c5102c977b7e0614cceee4f10ca5f303b17d15256047ba0c9a4c4232df",
-    "clash/proxy.yaml": "3440077c506cbf4cdbba36064632b02c70f254251bacbb7dd72f7105572b2b04",
+    "clash/proxy.list": "fb14d215d023223ac7797ff856dd2ea2908869112bd5b5bd994ef94de7126d42",
+    "clash/proxy.yaml": "82887ae2afc2e07d9bd1e4ca174c84753e13ad4c42863a089e09485796a7a1ed",
     "clash/reject.list": "346b46b6e2d601130885318ace84b2a9d3c24a4614bfb5027eff390249003195",
     "clash/reject.yaml": "fe5609e0ea3e1272575426a645936465856d7097bf9b63ce5c64a526499daa52",
     "review.json": "680a1bb63a857b4995382b332a718a35c47b47b80f240050661f77f266c7111f",
@@ -32,7 +32,7 @@
     "shadowrocket/direct.list": "0f4c4248f00712fd32fe12c51a1293397eb6a7320371c4a3f28e41f806493afc",
     "shadowrocket/media-global.list": "a6054eb93f93354c0a1949f350b4d26373e75316a795801172c0e121cf8354cd",
     "shadowrocket/media-hkmt.list": "60ce49cec9ceb7ed11ccfdce5a25dea8c6eb0a79c9dada6335c43386c10aa97f",
-    "shadowrocket/proxy.list": "539fd1c5102c977b7e0614cceee4f10ca5f303b17d15256047ba0c9a4c4232df",
+    "shadowrocket/proxy.list": "fb14d215d023223ac7797ff856dd2ea2908869112bd5b5bd994ef94de7126d42",
     "shadowrocket/reject.list": "346b46b6e2d601130885318ace84b2a9d3c24a4614bfb5027eff390249003195",
     "upstreams.lock.json": "d8a8eba1f2a4ef209f86afbae9a7bb22a586d79a4de72d434184a054b95d7886",
     "vendor/metacubex/LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -49,5 +49,5 @@
     "vendor/metacubex/geo/geosite/private.list": "9caf8f67450f6ff72fde0d2aec4d425238b88e371628011e51aab9185b0da73e"
   },
   "schema": 1,
-  "version": "7c9b2c255e22ece24c2b87dfd3543426bc90bb7816620ad2a87e09af92acf985"
+  "version": "27ae948beb8e304190344c28bf731fe3d1c7fbeb36e7485eb18975fcbdcb2e34"
 }

@@ -1,4 +1,5 @@
-# proxy | 553 rules | https://github.com/daviddwlee84/clash-rules
+# proxy | 554 rules | https://github.com/daviddwlee84/clash-rules
+DOMAIN-SUFFIX,jina.ai
 DOMAIN,sefapplyap.sef.org.tw
 DOMAIN-SUFFIX,ampproject.org
 DOMAIN-SUFFIX,appspot.com
