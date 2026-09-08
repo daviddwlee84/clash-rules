@@ -216,7 +216,14 @@ def conflict(rule, host, provider_data, addresses):
     if kind=="DOMAIN-REGEX":raise ValueError("DOMAIN-REGEX 的語意需另行 review，不以 Python regex 推測 core")
     if kind=="RULE-SET":
         if parts[1]!="rpi-local-proxy":raise ValueError("未知的較高優先 RULE-SET；先 review")
-        return any(x=="DOMAIN,"+host for x in provider_data.decode().splitlines())
+        matched=False
+        for line in provider_data.decode().splitlines():
+            if not line or line.startswith("#"):continue
+            entry=line.split(",")
+            if len(entry)!=2 or entry[0] not in ("DOMAIN","DOMAIN-SUFFIX"):
+                raise ValueError("未支援的 managed provider 規則；先 review")
+            matched=conflict(line,host,b"",addresses) or matched
+        return matched
     if kind in ("IP-CIDR","IP-CIDR6"):
         network=ipaddress.ip_network(parts[1],strict=False)
         return any(ipaddress.ip_address(ip) in network for ip in addresses if ipaddress.ip_address(ip).version==network.version)

@@ -45,7 +45,7 @@ DNS 與 routing 的覆蓋範圍必須一起 review，例如同一個媒體域名
 
 ## 受管 Pi 的部署邊界
 
-目前 `just proxy-rules` 只接受已建立的精確 DOMAIN → PROXY 更新，不能拿它更改 DNS、
+目前 `just proxy-rules` 只接受已審查的 DOMAIN／DOMAIN-SUFFIX → PROXY 更新，不能拿它更改 DNS、
 新增 selector 或引入整份中國網域 provider。這份片段是下一次配置遷移的 review 輸入，
 不是宣稱已套用到 Pi。需要以裝置 repo 的 transaction 驗證 profile/provider/DNS hashes、
 原生語法、既有連線與 fake-IP 映射、來源持久化，以及失敗後的 matching recovery。

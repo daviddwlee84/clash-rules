@@ -56,6 +56,14 @@ class ChinaPolicyResearchTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'優先規則'):
                 research.compose(files,'alidns',[rule])
 
+    def test_managed_suffix_conflict_preserves_proxy_policy(self):
+        files=self.files();files['proxy.list']=b'DOMAIN-SUFFIX,xiaohongshu.com\n'
+        with self.assertRaisesRegex(ValueError,'優先規則'):
+            research.compose(files,'alidns',['+.xiaohongshu.com'])
+        self.assertFalse(research.conflict('RULE-SET,rpi-local-proxy,PROXY','notxiaohongshu.com',files['proxy.list'],[]))
+        with self.assertRaises(ValueError):
+            research.conflict('RULE-SET,rpi-local-proxy,PROXY','www.xiaohongshu.com',b'DOMAIN-KEYWORD,xiaohongshu\n',[])
+
     def test_ambiguous_dns_and_remote_provider_refused(self):
         for change in ['policy','effective','provider','name']:
             files=self.files();source=json.loads(files['source.yaml']);runtime=json.loads(files['runtime.yaml'])
